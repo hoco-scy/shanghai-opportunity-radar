@@ -2,13 +2,82 @@
   "meta": {
     "schemaVersion": 1,
     "initializationStatus": "synchronized",
-    "lastVerifiedAt": "2026-08-22T19:36:00+08:00",
+    "lastVerifiedAt": "2026-08-22T21:46:00+08:00",
     "lastRunStatus": "completed",
     "lastIncompleteSourceCount": 0,
-    "lastDeferredCandidateCount": 93,
+    "lastDeferredCandidateCount": 0,
     "timezone": "Asia/Shanghai",
     "publicationRule": "仅发布能在官方公告、职位表或官方招聘系统中定位到的具体岗位；公考岗位还必须通过全部个人资格硬条件"
   },
-  "jobs": [],
+  "jobs": [
+    {
+      "id": "chinatelecom-59b9ae9cb8d509c8",
+      "track": "央国企",
+      "subtrack": "通信央企",
+      "organization": "上海电信科技发展有限公司",
+      "department": "官方未注明",
+      "title": "售后工程师",
+      "exactTitle": "售后工程师",
+      "jobCode": "59b9ae9cb8d509c8",
+      "location": "上海市",
+      "cohort": "校园招聘",
+      "recruitmentType": "校园招聘",
+      "headcount": "若干",
+      "education": "本科",
+      "degree": "官方未单列",
+      "majors": "2026、2027届毕业的本科及以上学历、学士及以上学位的应届毕业生。",
+      "politicalStatus": "官方未单列",
+      "experience": "校园招聘岗位",
+      "responsibilities": [
+        "1.根据客户要求，制定项目计划。 2.根据项目具体情况，进行项目成本控制，定期跟踪成本及利润状态，并向上级汇报。 3.根据项目具体情况，落实现场安全管理。 4.根据项目具体情况，做好进度管理，并及时与客户保持沟通。 5.根据项目具体情况，做好现场质量管理，保证项目验收通过。 6.对潜在的项目风险进行预测和分级,并制定调整计划和应急策略。 7.定期汇总项目实施情况，并向上级汇报。 8.完成领导交办的临时性任务。"
+      ],
+      "requirements": [
+        "2026、2027届毕业的本科及以上学历、学士及以上学位的应届毕业生。"
+      ],
+      "publishedAt": "2026-08-21",
+      "deadline": "官网未单列；以招聘系统实时状态为准",
+      "deadlineType": "官方未单列",
+      "status": "招聘中",
+      "priority": 64,
+      "matchLevel": "需要确认",
+      "matchReason": "官方学历与届别要求较宽，专业未单列；岗位并非生物医学定向，投递前应向单位确认。",
+      "riskNotes": [
+        "官网职位页未单列报名截止日，投递前请以系统实时状态为准。"
+      ],
+      "tags": [
+        "上海",
+        "中国电信",
+        "校园招聘",
+        "专业未单列",
+        "项目交付",
+        "专业待确认"
+      ],
+      "sourceId": "chinatelecom-careers",
+      "officialAnnouncementUrl": "https://job.chinatelecom.com.cn/wt/TELE/web/index/campus",
+      "officialApplyUrl": "https://job.chinatelecom.com.cn/wt/TELE/web/index/webPosition210!getOnePosition?postIdEnc=59b9ae9cb8d509c8&recruitType=1&positionType=0%2F1227%2F132804%2F132837%2F133009&columnId=1&brandCode=1&importPost=",
+      "applyInstruction": "打开中国电信官网职位详情后点击“立即申请”。",
+      "verifiedAt": "2026-08-22",
+      "lastSeenAt": "2026-08-22T21:46:00+08:00",
+      "lastSeenStatus": "live",
+      "statusEvidence": "本轮已在中国电信官网职位详情核验岗位字段和“立即申请”入口。",
+      "verifiedFields": [
+        "单位",
+        "岗位名称",
+        "地点",
+        "学历",
+        "职责",
+        "任职要求",
+        "投递路径"
+      ],
+      "verification": {
+        "officialSource": true,
+        "specificPosition": true,
+        "location": true,
+        "eligibility": true,
+        "applicationPath": true,
+        "deadlineChecked": true
+      }
+    }
+  ],
   "monitors": []
 }
