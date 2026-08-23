@@ -108,47 +108,50 @@
       "sourceId": "shanghai-selection-program",
       "status": "route-verified",
       "observedAt": "2026-08-23",
-      "officialEntryUrl": "https://www.shacs.gov.cn/",
-      "accessMode": "script-official-topic-api",
-      "nativeFilters": [],
+      "officialEntryUrl": "https://career.buaa.edu.cn/frontpage/buaa/html/newsList.html?id=5453aeeb99e74d78aea0b45fd456ae68",
+      "accessMode": "script-official-university-announcement-api",
+      "nativeFilters": [
+        "北航就业信息网栏目：公务员／选调生",
+        "标题：上海市 + 选调 + 应届优秀大学毕业生"
+      ],
       "queryPlan": {
         "everyRun": [
-          "脚本读取上海市公务员局公开专题目录及公告 JSON，只处理选调优秀大学毕业生、定向选调、选调生、优培和公开选调相关专题。",
-          "对专题内候选读取官方详情 JSON 和同域附件，不以高校转载或搜索摘要作为发布依据。",
+          "脚本读取选调高校官方就业网“公务员／选调生”公开栏目，按网站返回的总页数完成分页；不扫描未筛选的全站招聘列表。",
+          "仅打开标题命中“上海市 + 年度 + 选调 + 应届优秀大学毕业生公告”的详情，再确认正文标明中共上海市委组织部为发布机关并提取官方附件。",
           "报名期有效时解析公开职位表；明确预公告保留为公告级待核验，职位系统未开放不当作无岗位。"
         ],
-        "completionRule": "选调专题、公告详情和可见附件均返回官方 SUCCESS/非错误页面；未出现当期选调专题时记录已检查的空结果。"
+        "completionRule": "选调高校公开栏目全部分页、标题命中的公告详情和可见附件均有访问证据；没有命中当期公告时记录已检查的空结果。"
       },
-      "availabilityRule": "上海市公务员局同一官方系统集中承载市考与选调专题；该来源是独立专题路径而非虚构的第二域名。接口改版时只能记 accessible-incomplete。",
+      "availabilityRule": "上海应届选调公告按公告规则在选调高校官方网站公开发布；详情必须确认中共上海市委组织部为发布机关。栏目可访问但分页、详情或附件未完成时只能记 accessible-incomplete。",
       "collection": {
         "primary": "script",
-        "mode": "official-selection-topic-json-collector",
+        "mode": "official-university-selection-announcement-collector",
         "steps": [
           "运行 node scripts/collect-public-exams.mjs --source shanghai-selection-program --parse-position-tables。",
-          "采集器从官方专题接口筛出选调优培公告，进入详情并保留官方附件 URL。",
+          "采集器调用公开栏目分页接口，先按上海应届选调公告标题筛选，再进入匹配详情并保留官方附件 URL。",
           "只将有效报名公告或明确预公告写入匿名审核记录；逐岗发布仍要使用私有资格档案。"
         ],
-        "completion": "官方专题目录、相关公告详情和公开附件均有访问证据；专题未开放时如实写空结果。",
-        "fallback": "接口结构变动时记录 accessible-incomplete，并用浏览器重新校准公开请求；不得猜测年度专题 ID。",
+        "completion": "公开栏目全部分页、匹配公告详情和公开附件均有访问证据；公告未发布时如实写空结果。",
+        "fallback": "接口结构变动时记录 accessible-incomplete，并用浏览器打开该栏目或其他选调高校官方就业网重新校准公开请求；不得使用第三方转载代替发布证据。",
         "implementation": {
           "command": "node scripts/collect-public-exams.mjs --source shanghai-selection-program --parse-position-tables",
           "smokeTest": "node scripts/collect-public-exams.mjs --source shanghai-selection-program --max-notices 8 --summary",
-          "runtime": "Node.js 18+；npm ci --ignore-scripts 后运行；只访问 shacs.gov.cn 的公开接口与附件。",
-          "hardGuard": "仅保留选调优培分类的公告；职位系统关闭、未知期限或非官方附件不得被写成可报岗位。"
+          "runtime": "Node.js 18+；npm ci --ignore-scripts 后运行；只访问 career.buaa.edu.cn 的公开栏目、公告详情和附件。",
+          "hardGuard": "标题命中不足以入库：必须在详情确认中共上海市委组织部发布，且排除拟录用、公示、成绩、资格审核等流程通知；职位系统关闭、未知期限或非官方附件不得被写成可报岗位。"
         }
       },
       "availability": {
         "state": "available",
-        "summary": "上海市公务员局公开专题接口可访问；选调信息由同一官方系统集中发布。",
+        "summary": "选调高校官方就业网的“选调生”公开栏目可匿名分页访问；详情将逐条确认发布机关。",
         "evidence": [
           {
-            "method": "official-public-api-check",
-            "target": "https://shacs.gov.cn/gwyj/api/gwy-column-section.json?listChild=true",
-            "outcome": "official topic endpoint available",
-            "checkedAt": "2026-08-23T10:20:00+08:00"
+            "method": "official-university-public-api-check",
+            "target": "https://career.buaa.edu.cn/f/newsCenter/ajax_list",
+            "outcome": "公开“选调生”栏目接口返回分页，无需登录",
+            "checkedAt": "2026-08-23T17:12:00+08:00"
           }
         ],
-        "nextAction": "每轮从主题目录重新发现选调专题，不能依赖历史年度 URL。"
+        "nextAction": "每轮完成栏目分页后，按标题筛出上海应届选调公告并在详情确认中共上海市委组织部发布机关。"
       }
     },
     {

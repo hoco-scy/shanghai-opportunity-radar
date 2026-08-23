@@ -21,9 +21,10 @@ function json(value) {
 }
 
 function mockFetch(routes) {
-  return async (input) => {
+  return async (input, init) => {
     const key = String(input);
-    const response = routes[key];
+    const route = routes[key];
+    const response = typeof route === "function" ? route(input, init) : route;
     if (!response) throw new Error(`unexpected request: ${key}`);
     if (response instanceof Error) throw response;
     return new Response(response.body, {
@@ -167,35 +168,52 @@ test("collects Shanghai notices through the official API hierarchy", async () =>
   assert.equal(result.notices[0].attachments[0].officialUrl, "https://shacs.gov.cn/files/position.xlsx");
 });
 
-test("uses Shanghai's official selection topic as a separate collection path", async () => {
-  const sections = "https://shacs.gov.cn/gwyj/api/gwy-column-section.json?listChild=true";
-  const news = "https://shacs.gov.cn/gwyj/api/child-section-and-news.json?sectionId=408&pageSize=2000";
-  const detail = "https://shacs.gov.cn/gwyj/api/show-news.json?id=1285";
+test("collects Shanghai fresh-graduate selection announcements from the selected-university public category", async () => {
+  const categoryApi = "https://career.buaa.edu.cn/f/newsCenter/ajax_list";
+  const clientConfig = "https://career.buaa.edu.cn/frontpage/buaa/js/init.js";
+  const detail = "https://career.buaa.edu.cn/f/newsCenter/ajax_view?id=selection-2099";
   const fetchImpl = mockFetch({
-    [sections]: { body: json({ state: "SUCCESS", result: { child: [{ id: 408, name: "上海市2099年度选调优秀大学毕业生专题" }] } }) },
-    [news]: { body: json({ state: "SUCCESS", result: { secNews: { list: [{ id: 1285, title: "上海市2099年度选调优秀大学毕业生公告", postDate: "2099-10-01" }] } } }) },
-    [detail]: { body: json({ state: "SUCCESS", result: { title: "上海市2099年度选调优秀大学毕业生公告", postDate: "2099-10-01", content: "网上报名：2099年10月20日至11月5日。" } }) }
+    [clientConfig]: { body: "window._config = { token: 'public-token' };" },
+    [categoryApi]: { body: json({ state: 1, object: { newsPage: { totalPage: 1, list: [
+      { id: "selection-2099", title: "上海市2099年度选调应届优秀大学毕业生公告", releaseDate: "2099-09-08", url: "/frontpage/buaa/html/newsDetail.html?id=selection-2099" },
+      { id: "listed-2099", title: "上海市2099年度选调应届优秀大学毕业生拟录用人员名单", releaseDate: "2099-10-08", url: "/frontpage/buaa/html/newsDetail.html?id=listed-2099" }
+    ] } } }) },
+    [detail]: (_input, init) => {
+      assert.equal(init.headers.token, "public-token");
+      return { body: json({ state: 1, object: { article: {
+        title: "上海市2099年度选调应届优秀大学毕业生公告",
+        releaseDate: "2099-09-08",
+        articleData: { content: "<p>中共上海市委组织部</p><p>网上报名：2099年10月20日至11月5日。</p>" }
+      }, fileMap: [{ fileName: "附件1：职位表.xlsx", fileUrl: "/files/position.xlsx" }] } }) };
+    }
   });
   const result = await collectShanghaiSelectionProgram({ fetchImpl });
   assert.equal(result.sourceId, "shanghai-selection-program");
   assert.equal(result.noticeCount, 1);
   assert.equal(result.notices[0].category, "selection-program");
+  assert.equal(result.notices[0].lifecycle.status, "open-or-upcoming");
+  assert.equal(result.notices[0].attachments[0].officialUrl, "https://career.buaa.edu.cn/files/position.xlsx");
+  assert.match(result.collectionRoute, /选调高校官方就业网/);
 });
 
-test("does not fetch ordinary civil-service details while checking the Shanghai selection feed", async () => {
-  const sections = "https://shacs.gov.cn/gwyj/api/gwy-column-section.json?listChild=true";
-  const selectionNews = "https://shacs.gov.cn/gwyj/api/child-section-and-news.json?sectionId=408&pageSize=2000";
-  const civilNews = "https://shacs.gov.cn/gwyj/api/child-section-and-news.json?sectionId=407&pageSize=2000";
-  const selectionDetail = "https://shacs.gov.cn/gwyj/api/show-news.json?id=1285";
+test("rejects a selected-university relay when the detail cannot confirm Shanghai's issuing authority", async () => {
+  const categoryApi = "https://career.buaa.edu.cn/f/newsCenter/ajax_list";
+  const clientConfig = "https://career.buaa.edu.cn/frontpage/buaa/js/init.js";
+  const detail = "https://career.buaa.edu.cn/f/newsCenter/ajax_view?id=unverified-2099";
   const fetchImpl = mockFetch({
-    [sections]: { body: json({ state: "SUCCESS", result: { child: [{ id: 408, name: "上海市2099年度选调优秀大学毕业生专题" }, { id: 407, name: "上海市2099年度考试录用公务员专题" }] } }) },
-    [selectionNews]: { body: json({ state: "SUCCESS", result: { secNews: { list: [{ id: 1285, title: "上海市2099年度选调优秀大学毕业生公告", postDate: "2099-10-01" }] } } }) },
-    [civilNews]: { body: json({ state: "SUCCESS", result: { secNews: { list: [{ id: 1284, title: "上海市2099年度考试录用公务员公告", postDate: "2099-10-01" }] } } }) },
-    [selectionDetail]: { body: json({ state: "SUCCESS", result: { title: "上海市2099年度选调优秀大学毕业生公告", postDate: "2099-10-01", content: "网上报名：2099年10月20日至11月5日。" } }) }
+    [clientConfig]: { body: "window._config = { token: 'public-token' };" },
+    [categoryApi]: { body: json({ state: 1, object: { newsPage: { totalPage: 1, list: [
+      { id: "unverified-2099", title: "上海市2099年度选调应届优秀大学毕业生公告", releaseDate: "2099-09-08", url: "/frontpage/buaa/html/newsDetail.html?id=unverified-2099" }
+    ] } } }) },
+    [detail]: { body: json({ state: 1, object: { article: {
+      title: "上海市2099年度选调应届优秀大学毕业生公告",
+      articleData: { content: "<p>某高校就业中心</p>" }
+    } } }) }
   });
   const result = await collectShanghaiSelectionProgram({ fetchImpl });
-  assert.equal(result.noticeCount, 1);
-  assert.equal(result.errors.length, 0);
+  assert.equal(result.noticeCount, 0);
+  assert.equal(result.status, "completed-partial");
+  assert.match(result.errors[0].error, /中共上海市委组织部/);
 });
 
 test("uses Shenzhen's official announcement JSON rather than scraping a rendered list", async () => {

@@ -28,7 +28,7 @@ const scopeLabels = { announcement: "整份公告", position: "具体岗位", "o
 const sourceLabels = {
   "national-civil": "国家公务员局",
   "shanghai-civil": "上海市公务员招考",
-  "shanghai-selection-program": "上海选调生专题",
+  "shanghai-selection-program": "上海应届选调生公告",
   "shanghai-personnel-exam": "上海市人事考试平台",
   "shanghai-institutions": "上海市事业单位招聘",
   "central-institutions": "中央和国家机关事业单位招聘",

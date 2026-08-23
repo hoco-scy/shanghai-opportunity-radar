@@ -60,9 +60,13 @@ const SOURCE_CONFIG = {
   },
   "shanghai-selection-program": {
     sourceId: "shanghai-selection-program",
-    label: "上海市公务员局选调生专题",
-    allowedDomains: ["shacs.gov.cn"],
-    entries: [{ role: "选调生官方专题", url: "https://www.shacs.gov.cn/" }],
+    label: "中共上海市委组织部应届选调生公告（选调高校公开发布）",
+    allowedDomains: ["career.buaa.edu.cn"],
+    categoryApiUrl: "https://career.buaa.edu.cn/f/newsCenter/ajax_list",
+    clientConfigUrl: "https://career.buaa.edu.cn/frontpage/buaa/js/init.js",
+    detailApiUrl: "https://career.buaa.edu.cn/f/newsCenter/ajax_view",
+    categoryId: "5453aeeb99e74d78aea0b45fd456ae68",
+    entries: [{ role: "选调高校官方就业网：公务员／选调生", url: "https://career.buaa.edu.cn/frontpage/buaa/html/newsList.html?id=5453aeeb99e74d78aea0b45fd456ae68" }],
     defaultCity: "上海市"
   },
   "guangzhou-civil": {
@@ -104,7 +108,7 @@ const SOURCE_CONFIG = {
   }
 };
 
-const NOTICE_PATTERN = /(考试录用.{0,12}公务员|公务员.{0,24}(公告|职位|招考|补充录用|调剂|遴选|选调)|选调优秀大学毕业生|定向选调|公开选调(?:公务员)?|选调生|优培)/;
+const NOTICE_PATTERN = /(考试录用.{0,12}公务员|公务员.{0,24}(公告|职位|招考|补充录用|调剂|遴选|选调)|选调(?:应届)?优秀(?:大学|高校)毕业生|定向选调|公开选调(?:公务员)?|选调生|优培)/;
 const POSITION_ATTACHMENT_PATTERN = /(职位|招考简章|职位查询|附件\s*[一1]|附件1[-—至]?[\d一二三四五六七八九十]*)/;
 const FILE_ATTACHMENT_PATTERN = /\.(?:zip|xls|xlsx|csv|pdf|doc|docx)(?:$|[?#])/i;
 
@@ -225,14 +229,15 @@ function isSemanticErrorPage(finalUrl, text) {
   return /\/(?:404|error)(?:[/?#]|$)|页面不存在|访问的页面不存在|not\s+found/i.test(probe);
 }
 
-export async function fetchOfficialText(url, config, fetchImpl = fetch) {
+export async function fetchOfficialText(url, config, fetchImpl = fetch, requestHeaders = {}) {
   const requested = assertOfficialUrl(url, config);
   const response = await fetchImpl(requested, {
     redirect: "follow",
     headers: {
       "user-agent": USER_AGENT,
       accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
-      "accept-language": "zh-CN,zh;q=0.9"
+      "accept-language": "zh-CN,zh;q=0.9",
+      ...requestHeaders
     },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
   });
@@ -244,10 +249,38 @@ export async function fetchOfficialText(url, config, fetchImpl = fetch) {
   return { text, finalUrl };
 }
 
-export async function fetchOfficialJson(url, config, fetchImpl = fetch) {
-  const result = await fetchOfficialText(url, config, fetchImpl);
+export async function fetchOfficialJson(url, config, fetchImpl = fetch, requestHeaders = {}) {
+  const result = await fetchOfficialText(url, config, fetchImpl, requestHeaders);
   try { return { ...result, data: JSON.parse(result.text) }; }
   catch { throw new CollectionSafetyError(`官方接口没有返回可解析 JSON：${result.finalUrl}`); }
+}
+
+/**
+ * Calls a public, browser-observed form endpoint.  It intentionally accepts
+ * only a plain object: callers cannot smuggle arbitrary request options,
+ * credentials, or cookies into cloud runs.
+ */
+export async function fetchOfficialFormJson(url, form, config, fetchImpl = fetch) {
+  const requested = assertOfficialUrl(url, config);
+  const response = await fetchImpl(requested, {
+    method: "POST",
+    redirect: "follow",
+    headers: {
+      "user-agent": USER_AGENT,
+      accept: "application/json,text/plain,*/*;q=0.8",
+      "accept-language": "zh-CN,zh;q=0.9",
+      "content-type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(form).toString(),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  });
+  const text = await response.text();
+  const finalUrl = response.url || requested.toString();
+  assertOfficialUrl(finalUrl, config);
+  if (!response.ok) throw new CollectionSafetyError(`官方请求失败：HTTP ${response.status}（${finalUrl}）`);
+  if (isSemanticErrorPage(finalUrl, text)) throw new CollectionSafetyError(`官方页面为语义错误页（${finalUrl}）`);
+  try { return { text, finalUrl, data: JSON.parse(text) }; }
+  catch { throw new CollectionSafetyError(`官方接口没有返回可解析 JSON：${finalUrl}`); }
 }
 
 export async function fetchOfficialBuffer(url, config, fetchImpl = fetch) {
@@ -319,7 +352,7 @@ function classifyNotice(title = "") {
   if (/拟录用|公示|面试|资格审核|体检|考察|成绩|笔试/.test(title)) return "exam-process-notice";
   if (/职位表|招考简章|职位查询/.test(title)) return "position-table";
   if (/补充录用|调剂/.test(title)) return "supplementary-recruitment";
-  if (/选调优秀大学毕业生|定向选调|公开选调(?:公务员)?|选调生|优培/.test(title)) return "selection-program";
+  if (/选调(?:应届)?优秀(?:大学|高校)毕业生|定向选调|公开选调(?:公务员)?|选调生|优培/.test(title)) return "selection-program";
   if (/考试录用.*公务员公告|公务员.*招考公告/.test(title)) return "recruitment-announcement";
   return "exam-process-notice";
 }
@@ -652,7 +685,7 @@ function isShanghaiTopic(section) {
   return /(考试录用公务员|公开遴选|公开选调|聘任制公务员|选调优秀大学毕业生|定向选调|选调生|优培)/.test(`${section.name || ""} ${section.title || ""}`) && !/(辅警|辅助文员)/.test(`${section.name || ""} ${section.title || ""}`);
 }
 
-export async function collectShanghaiCivil({ sourceId = "shanghai-civil", selectionOnly = false, fetchImpl = fetch, maxNotices } = {}) {
+export async function collectShanghaiCivil({ sourceId = "shanghai-civil", fetchImpl = fetch, maxNotices } = {}) {
   const source = SOURCE_CONFIG[sourceId];
   const apiOrigin = "https://shacs.gov.cn";
   const sectionUrl = new URL("/gwyj/api/gwy-column-section.json?listChild=true", apiOrigin).toString();
@@ -688,12 +721,7 @@ export async function collectShanghaiCivil({ sourceId = "shanghai-civil", select
         sectionName: record.sectionName
       });
     }));
-  // The independent selection feed must not spend its detail budget on ordinary
-  // civil-service notices from the shared Shanghai topic directory. Besides
-  // being wasteful, a historical generic notice returning 502 must not make a
-  // successfully checked selection feed look incomplete.
-  const sourceRelevant = selectionOnly ? relevant.filter((notice) => notice.category === "selection-program") : relevant;
-  const chosen = limited(sourceRelevant, maxNotices);
+  const chosen = limited(relevant, maxNotices);
   const notices = await Promise.all(chosen.map(async (notice) => {
     try {
       const detail = await fetchOfficialJson(notice.detailApiUrl, source, fetchImpl);
@@ -713,12 +741,125 @@ export async function collectShanghaiCivil({ sourceId = "shanghai-civil", select
       return { ...notice, detailStatus: "unavailable" };
     }
   }));
-  const sourceNotices = selectionOnly ? notices.filter((notice) => notice.category === "selection-program") : notices;
-  return collectionResult(source, { notices: sourceNotices, errors, pagesVisited, truncated: chosen.length < sourceRelevant.length }, { collectionRoute: selectionOnly ? "官方选调生专题 JSON → 公告详情/附件" : "官方专题 JSON → 专题公告 JSON → 公告详情/附件" });
+  return collectionResult(source, { notices, errors, pagesVisited, truncated: chosen.length < relevant.length }, { collectionRoute: "官方专题 JSON → 专题公告 JSON → 公告详情/附件" });
 }
 
-export async function collectShanghaiSelectionProgram({ fetchImpl = fetch, maxNotices } = {}) {
-  return collectShanghaiCivil({ sourceId: "shanghai-selection-program", selectionOnly: true, fetchImpl, maxNotices });
+const SHANGHAI_GRADUATE_SELECTION_TITLE = /上海市\s*20\d{2}年度.{0,12}选调.{0,12}应届.{0,12}(?:优秀)?(?:大学|高校)毕业生公告/;
+const SHANGHAI_GRADUATE_SELECTION_EXCLUDED = /(拟录用|名单|公示|资格审核|笔试|面试|体检|考察|成绩|调剂|补录|录用)/;
+
+function isShanghaiGraduateSelectionAnnouncement(title = "") {
+  const text = String(title).replace(/\s+/g, "");
+  return SHANGHAI_GRADUATE_SELECTION_TITLE.test(text) && !SHANGHAI_GRADUATE_SELECTION_EXCLUDED.test(text);
+}
+
+function universityNewsDetailUrl(item, source) {
+  if (!item?.url) throw new CollectionSafetyError("选调高校公开列表缺少公告详情链接。");
+  const url = new URL(item.url, source.entries[0].url).toString();
+  assertOfficialUrl(url, source);
+  return url;
+}
+
+function publicClientToken(script) {
+  const token = String(script).match(/\btoken\s*:\s*["']([^"']+)["']/)?.[1];
+  if (!token) throw new CollectionSafetyError("选调高校公开前端配置未提供详情接口令牌，不能猜测或绕过访问控制。");
+  return token;
+}
+
+function universityDetailAttachments(fileMap, baseUrl, source) {
+  const attachments = [];
+  for (const file of fileMap || []) {
+    if (!file?.fileUrl) continue;
+    try {
+      const officialUrl = new URL(file.fileUrl, baseUrl).toString();
+      assertOfficialUrl(officialUrl, source);
+      attachments.push({
+        label: file.fileName || decodeURIComponent(new URL(officialUrl).pathname.split("/").pop() || "官方附件"),
+        officialUrl,
+        kind: "file"
+      });
+    } catch { /* A malformed or off-domain attachment is not retained. */ }
+  }
+  return attachments;
+}
+
+export async function collectShanghaiSelectionProgram({ fetchImpl = fetch, maxPages, maxNotices } = {}) {
+  const source = SOURCE_CONFIG["shanghai-selection-program"];
+  const clientConfig = await fetchOfficialText(source.clientConfigUrl, source, fetchImpl);
+  const publicToken = publicClientToken(clientConfig.text);
+  const first = await fetchOfficialFormJson(source.categoryApiUrl, {
+    categoryId: source.categoryId,
+    pageNo: "1",
+    pageSize: "100"
+  }, source, fetchImpl);
+  if (first.data?.state !== 1) throw new CollectionSafetyError("选调高校公开栏目未返回成功状态。");
+  const reportedPages = Number(first.data?.object?.newsPage?.totalPage || 1);
+  if (!Number.isInteger(reportedPages) || reportedPages < 1) throw new CollectionSafetyError("选调高校公开栏目未返回有效分页信息。");
+  const pageLimit = Math.min(reportedPages, maxPages || 12);
+  const pages = [first];
+  for (let pageNo = 2; pageNo <= pageLimit; pageNo += 1) {
+    const page = await fetchOfficialFormJson(source.categoryApiUrl, {
+      categoryId: source.categoryId,
+      pageNo: String(pageNo),
+      pageSize: "100"
+    }, source, fetchImpl);
+    if (page.data?.state !== 1) throw new CollectionSafetyError(`选调高校公开栏目第 ${pageNo} 页未返回成功状态。`);
+    pages.push(page);
+  }
+  const candidates = uniqueByUrl(pages.flatMap((page) => page.data?.object?.newsPage?.list || [])
+    .filter((item) => isShanghaiGraduateSelectionAnnouncement(item.title || item.name))
+    .map((item) => {
+      const officialUrl = universityNewsDetailUrl(item, source);
+      return normaliseNotice({
+        sourceId: source.sourceId,
+        title: item.title || item.name,
+        officialUrl,
+        publishedAt: item.releaseDate || item.createDate,
+        entryRole: source.entries[0].role
+      });
+    }));
+  const chosen = limited(candidates, maxNotices);
+  const errors = [];
+  const detailPagesVisited = [];
+  const verified = await Promise.all(chosen.map(async (notice) => {
+    try {
+      const detailApiUrl = new URL(source.detailApiUrl);
+      detailApiUrl.searchParams.set("id", notice.officialUrl.match(/[?&]id=([^&#]+)/)?.[1] || "");
+      if (!detailApiUrl.searchParams.get("id")) throw new CollectionSafetyError("选调高校公告详情链接缺少文章 ID。");
+      const detail = await fetchOfficialJson(detailApiUrl.toString(), source, fetchImpl, { token: publicToken });
+      detailPagesVisited.push(detail.finalUrl);
+      if (detail.data?.state !== 1) throw new CollectionSafetyError("选调高校公开详情接口未返回成功状态。");
+      const payload = detail.data?.object?.article || {};
+      const content = payload.articleData?.content || payload.content || "";
+      const detailText = textFromHtml(content);
+      if (!/(?:中共)?上海市委组织部/.test(detailText)) {
+        throw new CollectionSafetyError("公告详情未能确认中共上海市委组织部为发布机关。");
+      }
+      const title = payload.title || payload.name || notice.title;
+      if (!isShanghaiGraduateSelectionAnnouncement(title)) {
+        throw new CollectionSafetyError("公告详情标题不是面向应届毕业生的上海选调公告。");
+      }
+      return {
+        ...notice,
+        title,
+        officialUrl: notice.officialUrl,
+        publishedAt: payload.releaseDate || payload.createDate || notice.publishedAt,
+        attachments: uniqueAttachments([
+          ...extractAttachments(content, notice.officialUrl, source),
+          ...universityDetailAttachments(detail.data?.object?.fileMap, notice.officialUrl, source)
+        ]),
+        lifecycle: extractApplicationLifecycle(content, new Date(), { title, publishedAt: payload.releaseDate || payload.createDate || notice.publishedAt })
+      };
+    } catch (error) {
+      errors.push({ noticeId: notice.id, officialUrl: notice.officialUrl, error: error.message });
+      return undefined;
+    }
+  }));
+  return collectionResult(source, {
+    notices: verified.filter(Boolean),
+    errors,
+    pagesVisited: [clientConfig.finalUrl, ...pages.map((page, index) => `${page.finalUrl}#page=${index + 1}`), ...detailPagesVisited],
+    truncated: pageLimit < reportedPages || chosen.length < candidates.length
+  }, { collectionRoute: "选调高校官方就业网公开栏目 API → 上海应届选调公告详情/附件" });
 }
 
 function parseGuangdongNoticeLinks(html, baseUrl, source) {
@@ -944,7 +1085,7 @@ export async function collectPublicExam({ sourceId, fetchImpl = fetch, maxPages,
   if (sourceId === "national-civil") result = await collectNationalCivil({ fetchImpl, maxNotices });
   else if (sourceId === "beijing-civil") result = await collectBeijingCivil({ fetchImpl, maxPages, maxNotices });
   else if (sourceId === "shanghai-civil") result = await collectShanghaiCivil({ fetchImpl, maxNotices });
-  else if (sourceId === "shanghai-selection-program") result = await collectShanghaiSelectionProgram({ fetchImpl, maxNotices });
+  else if (sourceId === "shanghai-selection-program") result = await collectShanghaiSelectionProgram({ fetchImpl, maxPages, maxNotices });
   else if (sourceId === "guangzhou-civil" || sourceId === "shenzhen-civil") result = await collectGuangdongCivil({ sourceId, fetchImpl, maxPages, maxNotices });
   else if (["beijing-selection-program", "guangzhou-selection-program", "shenzhen-selection-program"].includes(sourceId)) result = await collectStaticSelectionProgram({ sourceId, fetchImpl, maxPages, maxNotices });
   else throw new CollectionSafetyError(`不支持的来源：${sourceId}`);
