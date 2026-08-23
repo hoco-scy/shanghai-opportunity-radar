@@ -83,6 +83,10 @@
       "officialIssuer": "中共上海市委组织部",
       "publicationModel": "上海市公务员考试报名系统仅作为用户快捷入口；应届选调公告及政策问答由选调高校官方网站公开发布",
       "collectionEntryUrl": "https://career.buaa.edu.cn/frontpage/buaa/html/newsList.html?id=5453aeeb99e74d78aea0b45fd456ae68",
+      "collectionOrganization": "北航就业信息网（公务员／选调生）",
+      "collectionType": "高校官方就业信息网",
+      "collectionCoverage": ["选调优培", "应届生", "上海"],
+      "collectionDomains": ["career.buaa.edu.cn"],
       "collectionAccessMode": "script-official-university-announcement-api",
       "collectionNote": "页面链接上海市公务员考试报名系统，方便用户直接访问；后台仅从北航就业网公开“公务员／选调生”栏目采集上海应届选调公告，并逐条确认中共上海市委组织部发布机关。",
       "replacedSourceScope": "该快捷入口不纳入采集或监控；上海市公务员局公开遴选和公开选调专题仅面向在职公务员，已排除出应届生来源"
