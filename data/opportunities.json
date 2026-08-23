@@ -2,7 +2,7 @@
   "meta": {
     "schemaVersion": 1,
     "initializationStatus": "synchronized",
-    "lastVerifiedAt": "2026-08-24T00:49:00+08:00",
+    "lastVerifiedAt": "2026-08-24T00:58:00+08:00",
     "lastRunStatus": "completed-partial",
     "lastIncompleteSourceCount": 15,
     "lastDeferredCandidateCount": 0,
@@ -11,76 +11,5 @@
   },
   "jobs": [],
   "monitors": [],
-  "candidates": [
-    {
-      "id": "candidate-iguopin-discovery-213554895964340936",
-      "track": "待确认线索",
-      "organization": "广州虹科电子科技有限公司",
-      "title": "技术传播工程师-生物科技方向(J10063)",
-      "exactTitle": "技术传播工程师-生物科技方向(J10063)",
-      "location": "北京；上海；苏州；广州；成都",
-      "education": "本科",
-      "majors": "生物医学工程类；生物学类；生物工程类；生物与化工全类；生物科学类",
-      "recruitmentType": "校招",
-      "publishedAt": "2026-08-13",
-      "deadline": "2026-11-10",
-      "status": "待用户确认",
-      "priority": 64,
-      "matchLevel": "待确认",
-      "matchReason": "已通过城市、应届硕士、专业相关性和纯计算机岗位排除的脚本初筛；尚未取得可作为正式发布依据的单位或政府原文。",
-      "sourceId": "iguopin-discovery",
-      "sourceUrl": "https://www.iguopin.com/job/detail?id=213554895964340936",
-      "officialAnnouncementUrl": "https://www.iguopin.com/job/detail?id=213554895964340936",
-      "officialApplyUrl": null,
-      "verifiedAt": "2026-08-24T00:49:00+08:00",
-      "manualConfirmationRequired": true,
-      "manualConfirmationReason": "平台未公开提供单位官网或独立投递地址；请先查看平台原页，再自行核对单位官网或投递渠道。",
-      "backtracking": {
-        "status": "manual-confirmation-required",
-        "automaticResult": "平台未返回可验证的单位直达链接，脚本不会猜测或搜索拼接官网。"
-      },
-      "collectionEvidence": "国聘公开岗位页的城市和生物医学相关关键词筛选结果；平台没有提供可核验的官方原文时，保留为待用户确认线索。",
-      "tags": [
-        "国聘/北航筛选",
-        "应届生",
-        "生物医学相关",
-        "需手动确认"
-      ]
-    },
-    {
-      "id": "candidate-iguopin-discovery-213530197771682504",
-      "track": "待确认线索",
-      "organization": "广州虹科电子科技有限公司",
-      "title": "解决方案工程师-医药电子方向(J10082)",
-      "exactTitle": "解决方案工程师-医药电子方向(J10082)",
-      "location": "北京；上海；苏州；广州",
-      "education": "硕士",
-      "majors": "电子信息类；自动化类；仪器科学与技术类；仪器类；计算机科学与技术类；计算机类；生物医学工程类；电气工程类；电子科学与技术类",
-      "recruitmentType": "校招",
-      "publishedAt": "2026-08-13",
-      "deadline": "2026-11-10",
-      "status": "待用户确认",
-      "priority": 64,
-      "matchLevel": "待确认",
-      "matchReason": "已通过城市、应届硕士、专业相关性和纯计算机岗位排除的脚本初筛；尚未取得可作为正式发布依据的单位或政府原文。",
-      "sourceId": "iguopin-discovery",
-      "sourceUrl": "https://www.iguopin.com/job/detail?id=213530197771682504",
-      "officialAnnouncementUrl": "https://www.iguopin.com/job/detail?id=213530197771682504",
-      "officialApplyUrl": null,
-      "verifiedAt": "2026-08-24T00:49:00+08:00",
-      "manualConfirmationRequired": true,
-      "manualConfirmationReason": "平台未公开提供单位官网或独立投递地址；请先查看平台原页，再自行核对单位官网或投递渠道。",
-      "backtracking": {
-        "status": "manual-confirmation-required",
-        "automaticResult": "平台未返回可验证的单位直达链接，脚本不会猜测或搜索拼接官网。"
-      },
-      "collectionEvidence": "国聘公开岗位页的城市和生物医学相关关键词筛选结果；平台没有提供可核验的官方原文时，保留为待用户确认线索。",
-      "tags": [
-        "国聘/北航筛选",
-        "应届生",
-        "生物医学相关",
-        "需手动确认"
-      ]
-    }
-  ]
+  "candidates": []
 }
