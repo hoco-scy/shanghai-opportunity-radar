@@ -108,7 +108,8 @@
       "sourceId": "shanghai-selection-program",
       "status": "route-verified",
       "observedAt": "2026-08-23",
-      "officialEntryUrl": "https://career.buaa.edu.cn/frontpage/buaa/html/newsList.html?id=5453aeeb99e74d78aea0b45fd456ae68",
+      "officialEntryUrl": "https://www.shacs.gov.cn/Link/2026018xd.htm",
+      "collectionEntryUrl": "https://career.buaa.edu.cn/frontpage/buaa/html/newsList.html?id=5453aeeb99e74d78aea0b45fd456ae68",
       "accessMode": "script-official-university-announcement-api",
       "nativeFilters": [
         "北航就业信息网栏目：公务员／选调生",
@@ -127,6 +128,7 @@
         "primary": "script",
         "mode": "official-university-selection-announcement-collector",
         "steps": [
+          "上海市公务员考试报名系统仅作用户快捷入口，不纳入采集或监控。",
           "运行 node scripts/collect-public-exams.mjs --source shanghai-selection-program --parse-position-tables。",
           "采集器调用公开栏目分页接口，先按上海应届选调公告标题筛选，再进入匹配详情并保留官方附件 URL。",
           "只将有效报名公告或明确预公告写入匿名审核记录；逐岗发布仍要使用私有资格档案。"

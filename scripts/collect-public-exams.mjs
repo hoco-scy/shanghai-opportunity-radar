@@ -110,6 +110,7 @@ const SOURCE_CONFIG = {
 
 const NOTICE_PATTERN = /(考试录用.{0,12}公务员|公务员.{0,24}(公告|职位|招考|补充录用|调剂|遴选|选调)|选调(?:应届)?优秀(?:大学|高校)毕业生|定向选调|公开选调(?:公务员)?|选调生|优培)/;
 const POSITION_ATTACHMENT_PATTERN = /(职位|招考简章|职位查询|附件\s*[一1]|附件1[-—至]?[\d一二三四五六七八九十]*)/;
+const POSITION_TABLE_FILE_PATTERN = /\.(?:xlsx?|csv|zip)(?:$|[?#])/i;
 const FILE_ATTACHMENT_PATTERN = /\.(?:zip|xls|xlsx|csv|pdf|doc|docx)(?:$|[?#])/i;
 
 export class CollectionSafetyError extends Error {
@@ -362,7 +363,7 @@ function isRelevantNotice(title) {
 }
 
 function isPositionAttachment(attachment) {
-  return FILE_ATTACHMENT_PATTERN.test(attachment.officialUrl) && (POSITION_ATTACHMENT_PATTERN.test(attachment.label) || /\.(?:zip|xls|xlsx|csv)(?:$|[?#])/i.test(attachment.officialUrl));
+  return POSITION_TABLE_FILE_PATTERN.test(attachment.officialUrl) && POSITION_ATTACHMENT_PATTERN.test(`${attachment.label || ""} ${attachment.officialUrl}`);
 }
 
 export function extractAttachments(html, baseUrl, config) {
